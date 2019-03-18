@@ -1,0 +1,49 @@
+server:
+  port: ${SERVER_PORT:8020}
+
+spring:
+  application:
+    name: servcie-gateway
+  cloud:
+    consul:
+        host: ${CONSUL_SERVER:127.0.0.1}
+        port: 8500
+        discovery:
+            prefer-ip-address: true     # 优先使用 IP 注册
+            ip-address: 127.0.0.1       # 假装部署在 docker 中,指定了宿主机 IP
+            port: 8080                  # 假装部署在 docker 中,指定了宿主机端口
+            health-check-interval: 20s  # 健康检查间隔时间为 20s
+            health-check-path: /health  # 自定义健康检查路径
+            tags: ${LANG},test          # 指定服务的标签, 用逗号隔开
+
+    gateway:
+      routes: #当访问http://localhost:8080/baidu,直接转发到https://www.baidu.com/
+      - id: user-routes
+        uri: lb://service-user
+        predicates:
+        - Path=/user/*
+#        discovery:
+#            instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+#            heartbeat:
+#              enabled: true
+#        config:
+#            enabled: true
+#            prefix: bto
+#            defaultContext: gateway
+#            profileSeparator: '::'
+#    loadbalancer:
+#        retry:
+#          enabled: true
+
+logging: ## Spring Cloud Gateway的日志配置
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.ipc.netty: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
